@@ -47,7 +47,7 @@ class _LogInScreenState extends State<LogInScreen> {
                   children: [
                     Flexible(
                     flex:2,
-                    child: Text("동네동기",
+                    child: Text("부스터",
                       style: TextStyle(fontWeight: FontWeight.bold,
                           color:Theme.of(context).primaryColor),textScaleFactor: 1.5,)),
                     Flexible(  flex:4,
@@ -121,7 +121,6 @@ class _LogInScreenState extends State<LogInScreen> {
                         flex:1,
                         child: GestureDetector(
                           onTap:() {
-                            onTapFindId(context);
                           },
                           child:Text(
                           "아이디를 잊으셨나요?",
@@ -142,7 +141,6 @@ class _LogInScreenState extends State<LogInScreen> {
                         flex:1,
                         child: GestureDetector(
                             onTap:() {
-                              onTapFindPs(context);
                             },
                             child:Text(
                               "비밀번호를 잊으셨나요?",
@@ -174,8 +172,6 @@ class _LogInScreenState extends State<LogInScreen> {
                           ),
                           onPressed: (){
                             if(_formKey.currentState!.validate()) {
-                              logIn(logInIdController.text.toString(),
-                                  psController.text.toString(), context);
                             }
                             },
                           child:Text(
@@ -205,7 +201,6 @@ class _LogInScreenState extends State<LogInScreen> {
                               ),
                             ),
                             onPressed: (){
-                              onTapSingUp(context);
                             },
                             child:Text(
                               "회원가입",
@@ -223,71 +218,4 @@ class _LogInScreenState extends State<LogInScreen> {
     );
   }
 
-  void onTapFindId(BuildContext context)
-  {
-    resetAll();
-    Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (_) => FindIdScreen()
-        )
-    );
-  }
-
-  void onTapFindPs(BuildContext context)
-  {
-    resetAll();
-    Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (_) => CreateNewPsVerificationScreen()
-        )
-    );
-  }
-
-  void onTapSingUp(BuildContext context)
-  {
-    resetAll();
-    Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (_) => SignUpScreen()
-        )
-    );
-  }
-
-  void logIn(String id, String ps, BuildContext context)
-  {
-    _controller.logIn(id, ps).then((String? val){
-      if(val == null)
-        {
-          logInErrorMsg = "아이디 또는 비밀번호를 잘못 입력했습니다.";
-          logInFail = true;
-          setState(() {
-          });
-        }
-      else{
-        /*Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => FindIdScreen()
-            )
-        );*/
-        logInErrorMsg = "성공!";
-        logInFail = true;
-        setState(() {
-        });
-      }
-    }).catchError((String error){
-      logInErrorMsg = "로그인시 에러가 발생했습니다. 다시 시도해 주세요.";
-      logInFail = true;
-      setState(() {
-      });
-    });
-  }
-
-  void resetAll()
-  {
-    logInFail = false;
-    logInErrorMsg = "";
-    setState(() {
-
-    });
-  }
 }

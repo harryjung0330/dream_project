@@ -140,10 +140,6 @@ class _FindIdScreenState extends State<FindIdScreen> {
                                     ),
                                     onPressed: (){
                                       if (_userEmailFormKey.currentState!.validate()) {
-                                        sendCodeRequest(
-                                            userNameController.text.toString(),
-                                            emailAddrController.text
-                                                .toString());
                                       }
                                       },
                                     child:Text(
@@ -254,7 +250,7 @@ class _FindIdScreenState extends State<FindIdScreen> {
                             ),
                             onPressed: (){
                               if (_codeFormKey.currentState!.validate()) {
-                                sendCode(correctUserName, correctEmailAddr);
+
                               }
                             },
                             child:Text(
@@ -288,61 +284,7 @@ class _FindIdScreenState extends State<FindIdScreen> {
     });
   }
 
-  void sendCodeRequest(String userName, String emailAddr) async
-  {
-    Controller controller = Controller();
-    bool? res = await controller.sendVerificationRequestForId(userName: userName, emailAddr: emailAddr);
-    print(res);
-    if(bool == true)
-    {
-      sendCodeErrorMsg = null;
-      correctUserName = userName;
-      correctEmailAddr = emailAddr;
-    }
-    else if( bool == false)
-    {
-      sendCodeErrorMsg = "일치하는 아이디가 없습니다.";
-    }
-    else{
-      sendCodeErrorMsg = "오류가 발생했습니다. 다시 시도해주세요.";
-    }
 
-    setState(() {
 
-    });
-  }
 
-  void sendCode(String? emailAddr, String? code) async
-  {
-    if(emailAddr == null || code == null)
-      {
-        sendCodeErrorMsg = "인증번호를 발송하세요!";
-        setState(() {
-
-        });
-      }
-    else {
-      Controller controller = Controller();
-      try {
-        String? logInId = await controller.sendVerificationCodeForId(
-            emailAddr: emailAddr, code: code);
-        if (logInId == null) {
-          throw Exception;
-        }
-        resetAll();
-        Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) => ShowIdScreen(logInId, correctUserName!)
-            )
-        );
-      }
-      catch (e) {
-        print(e);
-        isWrongCode = true;
-        setState(() {
-
-        });
-      }
-    }
-  }
 }
