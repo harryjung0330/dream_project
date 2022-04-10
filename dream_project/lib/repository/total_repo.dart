@@ -15,11 +15,6 @@ class TotalRepository{
 
   final FlutterSecureStorage storage = FlutterSecureStorage();
 
-  WebSocketChannel? chatChannel;
-  WebSocketChannel? meetingChannel;
-  Stream? meetingStream;
-  Stream? chatStream;
-
   static final TotalRepository _totalRepository = TotalRepository._privTotalRepository();
 
   factory TotalRepository()

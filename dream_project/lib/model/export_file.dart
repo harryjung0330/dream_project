@@ -1,14 +1,1 @@
-export "chat.dart";
-export "course.dart";
-export "extracurricular.dart";
-export "invited.dart";
-export "inviting.dart";
-export "matched_user.dart";
-export "me.dart";
-export "meeting.dart";
-export "study_room.dart";
-export "time_slot.dart";
-export "time_table.dart";
-export "user.dart";
 export "juso_list.dart";
-export "data_response.dart";

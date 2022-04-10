@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hackerton_project/view/create_new_passwd_verification.dart';
-import 'package:hackerton_project/view/find_id_screen.dart';
-import 'package:hackerton_project/view/sign_up.dart';
-
-import '../controller/controller.dart';
 
 class LogInScreen extends StatefulWidget
 {
@@ -14,208 +9,230 @@ class LogInScreen extends StatefulWidget
 }
 
 class _LogInScreenState extends State<LogInScreen> {
-  TextEditingController logInIdController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController psController = TextEditingController();
-  bool logInFail = false;
-  Controller _controller = Controller();
-  String logInErrorMsg = "";
 
-  final _formKey = GlobalKey<FormState>();
+  String? errorMsg = "hello";
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
-    
-    return GestureDetector(
-      onTap:(){
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        body:
-          SafeArea(
-            left:false,
-            right:false,
-            child: Padding(
-              padding: EdgeInsets.only(left: screenWidth * 0.1, right:screenWidth * 0.1,
-                  top: screenHeight * 0.05, bottom: screenHeight * 0.05),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Flexible(
-                    flex:2,
-                    child: Text("부스터",
-                      style: TextStyle(fontWeight: FontWeight.bold,
-                          color:Theme.of(context).primaryColor),textScaleFactor: 1.5,)),
-                    Flexible(  flex:4,
-                        child:Container(
 
-                        )
-                    )
-                    ,
-                    Flexible(
-                      flex:2,
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            hintText: "아이디를 입력하세요",
-                              hintStyle: TextStyle(color: Colors.grey),
-                          ),
-                          controller: logInIdController,
-                          validator: (String? value)
-                            {
-                              if(value == null || value.isEmpty)
-                                {
-                                  return "아이디를 입력하세요!";
-                                }
-                            }
-                        )
-                    ),
-                    Flexible(
-                        flex:2,
-                        child:Container(
+    final double mainWidgetWidth = screenWidth * 0.8;
+    final double mainWidgetHeight = screenHeight * 0.4;
 
-                        )
-                    ),
-                    Flexible(
-                        flex:2,
-                        child: TextFormField(
-                          controller:psController,
-                          decoration: InputDecoration(
-                              hintText: "비밀번호를 입력하세요",
-                              hintStyle: TextStyle(color: Colors.grey)
-                          ),
-                            obscureText: true,
-                          autocorrect: false,
-                          validator: (String? value) {
-                            if(value == null || value.isEmpty)
-                              {
-                                return "비밀번호를 입력하세요!";
-                              }
-                            else if( value.length < 8 || value.length > 20)
-                              {
-                                return "올바른 비밀번호가 아닙니다!";
-                              }
-                            else{
-                              return null;
-                            }
-                          },
-                        )
-                    ),
-                    Flexible(
-                        flex:2,
-                        child: Container(
-                          height: double.infinity,
-                          child: logInFail? Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(logInErrorMsg,
-                            style: TextStyle(
-                              color: Colors.red
-                            ), textScaleFactor: 0.7,),
-                          ): Container(),
-                        )
-                    ),
-                    Flexible(
-                        flex:1,
-                        child: GestureDetector(
-                          onTap:() {
-                          },
-                          child:Text(
-                          "아이디를 잊으셨나요?",
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                          ),
-                            textScaleFactor: 0.7,
-                        )
-                        )
-                    ),
-                    Flexible(
-                        flex:1,
-                        child:Container(
+    Widget mainWidget = Stack(
+      children: [
+        backGround(screenHeight),
+        frontStack(mainWidgetWidth, mainWidgetHeight)
 
-                        )
-                    ),
-                    Flexible(
-                        flex:1,
-                        child: GestureDetector(
-                            onTap:() {
-                            },
-                            child:Text(
-                              "비밀번호를 잊으셨나요?",
-                              style: TextStyle(
-                                  decoration: TextDecoration.underline
-                              ),
-                                textScaleFactor: 0.7
-                            )
-                        )
-                    ),
-                    Flexible(
-                        flex:20,
-                        child:Container(
+      ],
+    );
 
-                        )
-                    ),
-                    Flexible(
-                      flex:4,
-                      child:SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                          style: ButtonStyle(
-                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18.0),
-                                      side: BorderSide(color: Colors.black)
-                                  )
-                              ),
-                          ),
-                          onPressed: (){
-                            if(_formKey.currentState!.validate()) {
-                            }
-                            },
-                          child:Text(
-                            "로그인",
-                          style: TextStyle(color:Colors.black),
-                          )
-                        ),
-                      ),
-                    ),
-                    Flexible(
-                        flex:2,
-                        child:Container(
+    return safteyBackground( mainWidget, screenHeight, screenWidth);
+  }
 
-                        )
-                    ),
-                    Flexible(
-                      flex:4,
-                      child:SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                            style: ButtonStyle(
-                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18.0),
-                                      side: BorderSide(color: Colors.black)
-                                  )
-                              ),
-                            ),
-                            onPressed: (){
-                            },
-                            child:Text(
-                              "회원가입",
-                              style: TextStyle(color:Colors.black),
-                            )
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+  Widget frontStack(double widgetWidth, double widgetHeight)
+  {
+   return Column(
+     crossAxisAlignment: CrossAxisAlignment.center,
+     mainAxisAlignment: MainAxisAlignment.start,
+     children: [
+       spacer(8),
+       Text(
+         "부스터",
+         style: TextStyle(
+             color: Colors.white,
+           fontWeight: FontWeight.bold
+         ),
+         textScaleFactor: 1.2,
+       ),
+       spacer(3),
+       SizedBox(
+         width: widgetWidth,
+         height: widgetHeight,
+         child: LogInInput(),
+       ),
+       spacer(5),
+       SizedBox(
+          width: widgetWidth,
+           child: logInButton()
+       ),
+       spacer(1),
+       SizedBox(
+         width: widgetWidth,
+           child: signUpButton()
+       ),
+       spacer(5)
+     ],
+   );
+  }
+
+  Widget signUpButton()
+  {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+
+        style: ButtonStyle(
+          foregroundColor: MaterialStateProperty.resolveWith(
+                  (state) => Theme.of(context).primaryColor),
+
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.0),
+                side: BorderSide(color: Theme.of(context).primaryColor),
               )
-            ),
-          )
+          ),
+        ),
+        child: Text(
+          "회원가입", style: TextStyle(color: Theme.of(context).primaryColor), textScaleFactor: 1.2,
+        ),
+        onPressed: (){},
       ),
     );
   }
 
+  Widget logInButton()
+  {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+
+        style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.resolveWith(
+                    (state) => Theme.of(context).primaryColor),
+
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18.0),
+          side: BorderSide(color: Theme.of(context).primaryColor),
+            )
+          ),
+        ),
+        child: Text(
+          "로그인", style: TextStyle(color: Colors.white), textScaleFactor: 1.2,
+        ),
+        onPressed: (){},
+      ),
+    );
+  }
+
+  Widget LogInInput()
+  {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+
+        borderRadius: BorderRadius.all(Radius.circular(40))
+      ),
+      child:Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            spacer(2),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                hintText: "이메일을 입력하세요",
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+            ),
+            spacer(1),
+            TextField(
+              controller: psController,
+              decoration: InputDecoration(
+                hintText: "비밀번호를 입력하세요",
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+            ),
+            Align(
+                alignment:Alignment.centerLeft,
+              child: errorMsg == null ? Container(): Text(errorMsg!, style: TextStyle(color: Colors.red), textScaleFactor: 0.8,),
+            ),
+            spacer(2),
+            Align(
+              alignment:Alignment.centerLeft,
+              child: forgetPs()
+            )
+          ],
+        ),
+      )
+    );
+  }
+
+  Widget forgetPs()
+  {
+    return GestureDetector(
+      onTap: _onForgetPs,
+      child: Text(
+        "비밀번호를 잊으셨나요?",
+        textScaleFactor: 0.9,
+        style: TextStyle(
+          color:Colors.blue,
+            decoration: TextDecoration.underline
+        ),
+      ),
+    );
+  }
+
+  Widget safteyBackground(Widget mainWidget, double screenHeight, double screenWidth)
+  {
+    return GestureDetector(
+      onTap: (){
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child:SizedBox(
+            height: screenHeight,
+            width: screenWidth,
+            child: mainWidget
+          )
+        )
+      ),
+    );
+  }
+
+
+  Widget spacer(int flex)
+  {
+    return Flexible(
+      flex: flex,
+      child: Container(),
+    );
+  }
+
+  Widget backGround(double screenHeight)
+  {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: screenHeight / 2,
+          child: Container(
+            color:Theme.of(context).primaryColor
+            )
+        ),
+        SizedBox(
+            width: double.infinity,
+            height: screenHeight / 2,
+            child: Container(
+                color:Colors.white
+            )
+        )
+      ],
+    );
+  }
+
+  //-------------------------------------------------------------------------------
+
+  void _onForgetPs()
+  {
+
+  }
 }
