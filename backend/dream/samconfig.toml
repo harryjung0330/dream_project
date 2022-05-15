@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "dreamProject"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1dhx21w7i0cz7"
+s3_prefix = "dreamProject"
+region = "ap-northeast-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_NAMED_IAM"
+image_repositories = []
+disable_rollback = true

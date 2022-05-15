@@ -1,0 +1,1138 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  dream
+
+  Sample SAM Template for dream
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref LambdaSecurityGroup1
+      SubnetIds:
+        - !Ref LambdaSubnet
+
+Resources:
+  #---------- Security Group For Lambda -----------------
+  LambdaSecurityGroup1:
+        Type: "AWS::EC2::SecurityGroup"
+        Properties:
+            GroupDescription: "Security Group For Lambda"
+            VpcId: !Ref VPC    
+            Tags:
+            - Key: Name
+              Value: 'LambdaSecurityGroup'
+            SecurityGroupIngress:    
+            - IpProtocol: tcp     
+              FromPort: 0         
+              ToPort: 1024
+              CidrIp : '0.0.0.0/0'  
+        DependsOn: VPCGatewayAttachment
+  
+  #-------------- VPC Resources ------------------
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: '10.0.0.0/16'
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value: 'VPC for dream'
+  
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+    DependsOn: VPC
+
+  VPCGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties: 
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  #------ public subnet ----------------------
+  PublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: "ap-northeast-2a"
+      CidrBlock : '10.0.1.0/24'
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: "public subnet"
+  
+  RouteTablePublicSubnet:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+  
+  RoutePublicSubnetToInternet:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref InternetGateway
+    DependsOn: VPCGatewayAttachment
+  
+  AssociationRouteTablePublicSubnet:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties: 
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref RouteTablePublicSubnet
+
+  EIPNATGateway:                #Nat Gateway가 사용할 static ip address
+    Type: 'AWS::EC2::EIP'       
+    Properties: 
+        Domain : 'VPC'
+        
+  NatGateway:                  #NAT Gateway를 public subnet에 배치시킨다.
+      Type: 'AWS::EC2::NatGateway'
+      Properties:
+          AllocationId: !GetAtt EIPNATGateway.AllocationId
+          SubnetId : !Ref PublicSubnet
+
+
+  #----------- private subnet for LAMBDA------------------------
+  LambdaSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: 'ap-northeast-2a'
+      CidrBlock: '10.0.0.0/24'
+      VpcId: !Ref VPC
+      Tags: 
+      - Key: Name
+        Value: 'subnet for lambda'
+  
+  RouteTableLambdaSubnet:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+  
+  RouteLambdaSubnetToNATGateway:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref RouteTableLambdaSubnet
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGateway
+  
+  AssociationLambdaSubnetRouteTable:        # route table을 LambdaSubnet에 지정
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref LambdaSubnet
+      RouteTableId: !Ref RouteTableLambdaSubnet
+  
+  #---------- private subnet for vpc endpoint ------------
+  EndpointSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: 'ap-northeast-2a'
+      CidrBlock: '10.0.2.0/24'
+      VpcId: !Ref VPC
+      Tags: 
+      - Key: Name
+        Value: 'subnet for vpc endpoints'
+  
+  RouteTableEndpointSubnet:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+
+  RouteEndpointSubnetToNAT:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref RouteTableEndpointSubnet
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGateway
+  
+  AssociationEndpointSubnetRouteTable:        # route table을 EndpointSubnet에 지정
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref EndpointSubnet
+      RouteTableId: !Ref RouteTableEndpointSubnet
+
+  #--------- VPC endpoints --------------------------
+  DynamoEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      RouteTableIds:                    #어떤 route table이 이 resource에 route할수 있는지 지정
+        - !Ref RouteTableEndpointSubnet
+        - !Ref RouteTableLambdaSubnet
+      ServiceName: "com.amazonaws.ap-northeast-2.dynamodb" 
+      VpcEndpointType: Gateway
+      VpcId: !Ref VPC
+  
+  #--------- Layer for Lambdas -----------------------
+  Lambdalayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: LambdaLayer
+      Description: Layer for all lambdas
+      ContentUri: s3://layerbucke1234412/nodejs.zip
+      
+  #--------- Lambda Function -------------------------
+
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: hello-world/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Architectures:
+        - x86_64
+      Events:
+        HelloWorld:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello
+            Method: get
+
+  DynamoUpdateNickname:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          VISIT_TABLE_NAME: !Ref visit
+      CodeUri: hello-world/
+      Handler: DynamoUpdateNickname.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt roleOnNicknameUpdate.Arn
+
+  DynamoInsertVisitTag:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          VISIT_TAG_TABLE_NAME: !Ref visitTag
+      CodeUri: hello-world/
+      Handler: DynamoInsertVisitTag.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DynamoInsertVisitTagRole.Arn
+
+  DynamoInsertArticleIndex:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          ARTICLE_INDEX_TABLE_NAME: !Ref articleIndex
+      CodeUri: hello-world/
+      Handler: DynamoInsertArticleIndex.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DynamoInsertArticleIndexRole.Arn
+
+  DynamoInsertUserKeywords:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          USER_KEYWORDS_TABLE_NAME: !Ref userKeyWords
+          ARTICLE_TABLE_NAME: !Ref article
+      CodeUri: hello-world/
+      Handler: DynamoInsertUserKeywords.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DynamoInsertUserKeywordsRole.Arn
+
+  #--------------------- lambdas for api ---------------------------
+  DreamAuthorizer:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: hello-world/
+      Handler: dream_log_in.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+
+  DreamLogIn:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref user
+      CodeUri: hello-world/
+      Handler: dream_log_in.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamLogInRole.Arn
+
+  DreamSendMailPs:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref user
+          PS_EMAIL_VALIDATION_TABLE_NAME: !Ref psEmailValidation
+      CodeUri: hello-world/
+      Handler: dream_send_mail_ps.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamSendMailPsRole.Arn
+
+  DreamVerifyCodePs:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          PS_EMAIL_VALIDATION_TABLE_NAME: !Ref psEmailValidation
+      CodeUri: hello-world/
+      Handler: dream_verify_code_ps.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamVerifyCodePsRole.Arn
+
+  DreamCreateNewPs:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          PS_EMAIL_VALIDATION_TABLE_NAME: !Ref psEmailValidation
+          USER_TABLE_NAME: !Ref user
+      CodeUri: hello-world/
+      Handler: dream_create_new_ps.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamCreateNewPsRole.Arn
+
+  DreamSendMailSignup:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          SIGNUP_EMAIL_VALIDATION_TABLE_NAME: !Ref signUpEmailValidation
+      CodeUri: hello-world/
+      Handler: dream_send_mail_signup.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamSendMailSignupRole.Arn
+
+  DreamVerifyCodeSignup:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          SIGNUP_EMAIL_VALIDATION_TABLE_NAME: !Ref signUpEmailValidation
+      CodeUri: hello-world/
+      Handler: dream_verify_code_signup.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamVerifyCodeSignupRole.Arn
+  
+  DreamCheckNicknameDuplicate:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          NICKNAME_TABLE_NAME: !Ref nickname
+      CodeUri: hello-world/
+      Handler: dream_check_nickname_duplicate.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamCheckNicknameDuplicateRole.Arn
+
+  DreamSignUp:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          NICKNAME_TABLE_NAME: !Ref nickname
+          SIGNUP_EMAIL_VALIDATION_TABLE_NAME : !Ref signUpEmailValidation
+          USER_TABLE_NAME: !Ref user
+      CodeUri: hello-world/
+      Handler: dream_sign_up.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamSignUpRole.Arn
+
+  DreamAddVisit:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref user
+          VISIT_TABLE_NAME : !Ref visit
+          BUCKET_NAME: !Ref S3Bucket
+      CodeUri: hello-world/
+      Handler: dream_add_visit.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamAddVisitRole.Arn
+
+
+  # -------------- DynamoDB ------------------------------
+  psEmailValidation:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ps_email_validation
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: setTime
+        Enabled: True
+  
+  signUpEmailValidation:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: signup_email_validation
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: setTime
+        Enabled: True
+
+  user:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: user
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  
+  nickname:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nickname
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: nickname
+          AttributeType: S
+      KeySchema:
+        - AttributeName: nickname
+          KeyType: HASH
+  
+  userKeyWords:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: userKeywords
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+  
+  article:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: article
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: title
+          AttributeType: S
+        - AttributeName: fetchTime
+          AttributeType: N
+      KeySchema:
+        - AttributeName: title
+          KeyType: HASH
+        - AttributeName: fetchTime
+          KeyType: RANGE
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  
+  readArticle:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: readArticle
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: article
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: article
+          KeyType: RANGE
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  articleIndex:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: articleIndex
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: keyword
+          AttributeType: S
+      KeySchema:
+        - AttributeName: keyword
+          KeyType: HASH
+  
+  likeVisit:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: likeVisit
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: visit
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: visit
+          KeyType: RANGE
+  
+  visit:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: visit
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: writer
+          AttributeType: S
+        - AttributeName: title
+          AttributeType: S
+      KeySchema:
+        - AttributeName: writer
+          KeyType: HASH
+        - AttributeName: title
+          KeyType: RANGE
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  visitTag:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: visitTag
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: tag
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tag
+          KeyType: HASH
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: dream-proj-bucket2022
+      AccessControl: PublicRead
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+
+  #---------------- Filter Mapping --------------------------
+  nicknameEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      # The maximum number of DB items to send to Lambda
+      BatchSize: 1  # It can be changed based on the need
+      Enabled: True
+      EventSourceArn: !GetAtt user.StreamArn
+      FunctionName: !GetAtt DynamoUpdateNickname.Arn
+      # Always start at the tail of the Stream
+      StartingPosition: LATEST
+      FilterCriteria:
+        Filters:
+          - Pattern: "{\"eventName\": [\"MODIFY\"]}"
+
+  visitTagEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      # The maximum number of DB items to send to Lambda
+      BatchSize: 1  # It can be changed based on the need
+      Enabled: True
+      EventSourceArn: !GetAtt visit.StreamArn
+      FunctionName: !GetAtt DynamoInsertVisitTag.Arn
+      # Always start at the tail of the Stream
+      StartingPosition: LATEST
+      FilterCriteria:
+        Filters:
+          - Pattern: "{\"eventName\": [\"INSERT\"]}"
+    
+  articleIndexEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      # The maximum number of DB items to send to Lambda
+      BatchSize: 1  # It can be changed based on the need
+      Enabled: True
+      EventSourceArn: !GetAtt article.StreamArn
+      FunctionName: !GetAtt DynamoInsertArticleIndex.Arn
+      # Always start at the tail of the Stream
+      StartingPosition: LATEST
+      FilterCriteria:
+        Filters:
+          - Pattern: "{\"eventName\": [\"INSERT\"]}"
+
+  userKeywordsEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      # The maximum number of DB items to send to Lambda
+      BatchSize: 1  # It can be changed based on the need
+      Enabled: True
+      EventSourceArn: !GetAtt readArticle.StreamArn
+      FunctionName: !GetAtt DynamoInsertUserKeywords.Arn
+      # Always start at the tail of the Stream
+      StartingPosition: LATEST
+      FilterCriteria:
+        Filters:
+          - Pattern: "{\"eventName\": [\"INSERT\", \"MODIFY\"]}"
+
+  #--------------------------- Role For DreamAddVisit -------------------------------
+  DreamAddVisitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamAddVisitRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamAddVisitRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - s3:*
+            Resource: "*"
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: !GetAtt visit.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: !GetAtt user.Arn
+
+  #--------------------------- Role For DreamSignUp -------------------------------
+  DreamSignUpRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamSignUpRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamSignUpRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: !GetAtt nickname.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: !GetAtt user.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: !GetAtt signUpEmailValidation.Arn
+
+
+  #--------------------------- Role For DreamCheckNicknameDuplicate -------------------------------
+  DreamCheckNicknameDuplicateRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamCheckNicknameDuplicateRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamCheckNicknameDuplicateRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: !GetAtt nickname.Arn
+
+  #--------------------------- Role For DreamVerifyCodeSignup -------------------------------
+  DreamVerifyCodeSignupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamVerifyCodeSignupRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamVerifyCodeSignupRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt signUpEmailValidation.Arn
+
+  #--------------------------- Role For DreamCreateNewPs -------------------------------
+  DreamCreateNewPsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamCreateNewPsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamDreamCreateNewPsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: !GetAtt psEmailValidation.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:UpdateItem
+            Resource: !GetAtt user.Arn
+
+  #--------------------------- Role For DreamSendMailSignup -------------------------------
+  DreamSendMailSignupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamSendMailSignupRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamSendMailSignupRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: !GetAtt signUpEmailValidation.Arn
+
+  #--------------------------- Role For DreamVerifyCodePs -------------------------------
+  DreamVerifyCodePsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamVerifyCodePsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamVerifyCodePsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt psEmailValidation.Arn
+
+
+  #--------------------------- Role For DreamSendMailPs -------------------------------
+  DreamSendMailPsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamSendMailPsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamSendMailPsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+              - dynamodb:GetItem
+            Resource: !GetAtt user.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+            Resource: !GetAtt psEmailValidation.Arn
+
+  #--------------------------- Role For DreamLogIn -------------------------------------
+  DreamLogInRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamLogInRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamLogInRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+              - dynamodb:GetItem
+            Resource: !GetAtt user.Arn
+
+  # -------------------------- Role For DynamoUpdateNickname ---------------------------
+  roleOnNicknameUpdate:  # role for DynamoUpdateNickname lambda function
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: roleForOnNicknameUpdate
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref DynamoDBStreamPolicy
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+        - !Ref UpdateAndReadVisitTablePolicy
+
+  UpdateAndReadVisitTablePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: visit-update-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+            Resource: !GetAtt visit.Arn
+
+
+  #--------------------- Role For DynamoInsertVisitTag ---------------------
+  DynamoInsertVisitTagRole:  # role for DynamoUpdateNickname lambda function
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DynamoInsertVisitTagRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref DynamoDBStreamPolicy
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDynamoInsertVisitTagRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:GetItem
+            Resource: !GetAtt visitTag.Arn
+
+  #-------------------- role for DynamoInsertArticleIndex ---------------------
+  DynamoInsertArticleIndexRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DynamoInsertArticleIndexRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref DynamoDBStreamPolicy
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDynamoInsertVisitTagRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:GetItem
+            Resource: !GetAtt articleIndex.Arn
+
+  #-------------------- role for DynamoInsertUserKeywords ---------------------
+  DynamoInsertUserKeywordsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DynamoInsertUserKeywordsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref DynamoDBStreamPolicy
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDynamoInsertUserKeyowrdsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:GetItem
+            Resource: !GetAtt userKeyWords.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+              - dynamodb:GetItem
+            Resource: !GetAtt article.Arn
+
+  
+  #--------------------- Global Managed Policy -------------------------------
+  CloudwatchExPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: cloudwatch-log-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow #allow to write logs to cloudwatch
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*
+
+  DynamoDBStreamPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: dynamodb-listen-stream-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:DescribeStream
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:ListStreams
+            Resource: '*'    
+
+  LambdaNetworkPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: lambda-network-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:CreateNetworkInterface
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DeleteNetworkInterface
+              - ec2:AssignPrivateIpAddresses
+              - ec2:UnassignPrivateIpAddresses
+            Resource: '*'    
+
+
+
+
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn
+  UserTable:
+    Description: "table for user info"
+    Value: !GetAtt user.Arn

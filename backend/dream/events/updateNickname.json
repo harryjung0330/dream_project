@@ -1,0 +1,20 @@
+{
+    "Records": [
+      {
+        "eventID": "9ff6c1ad237d1618ed7a4e445be56d85",
+        "eventName": "INSERT",
+        "eventVersion": "1.1",
+        "eventSource": "aws:dynamodb",
+        "awsRegion": "ap-northeast-2",
+        "dynamodb": {
+            "ApproximateCreationDateTime": 1651128594,
+            "Keys": { "email": { "S": "yolo" } },
+            "NewImage": { "nickname": { "S": "nickname" }, "email": { "S": "yolo" } },
+            "SequenceNumber": "100000000022867186195",
+            "SizeBytes": 34,
+            "StreamViewType": "NEW_AND_OLD_IMAGES"
+          },
+        "eventSourceARN": "arn:aws:dynamodb:ap-northeast-2:628407084158:table/dreamProj-user-1JO8VK21OBND8/stream/2022-04-28T05:07:33.206"
+      }
+    ]
+  }
