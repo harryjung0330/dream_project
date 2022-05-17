@@ -174,22 +174,6 @@ Resources:
       
   #--------- Lambda Function -------------------------
 
-
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
-      Runtime: nodejs14.x
-      Architectures:
-        - x86_64
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /hello
-            Method: get
-
   DynamoUpdateNickname:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -410,6 +394,172 @@ Resources:
         - x86_64
       Role: !GetAtt DreamAddVisitRole.Arn
 
+  DreamRecommendVisits:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          VISIT_TABLE_NAME : !Ref visit
+          SORT_VISIT_INDEX: "sortVisit"
+          LIKE_VISIT_TABLE: !Ref likeVisit
+      CodeUri: hello-world/
+      Handler: dream_recommend_visits.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamRecommendVisitsRole.Arn
+
+  DreamLikeVisits:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          LIKE_VISIT_TABLE: !Ref likeVisit
+      CodeUri: hello-world/
+      Handler: dream_like_visit.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamLikeVisitRole.Arn
+
+  DreamUnlikeVisits:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          LIKE_VISIT_TABLE: !Ref likeVisit
+      CodeUri: hello-world/
+      Handler: dream_unlike_visit.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamUnlikeVisitRole.Arn
+
+  DreamDetailVisit:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          VISIT_TABLE_NAME : !Ref visit
+          LIKE_VISIT_TABLE: !Ref likeVisit
+      CodeUri: hello-world/
+      Handler: dream_detail_visit.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamDetailVisitRole.Arn
+
+  DreamSearchVisit:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          VISIT_TAG_TABLE_NAME: !Ref visitTag
+          LIKE_VISIT_TABLE_NAME: !Ref likeVisit
+      CodeUri: hello-world/
+      Handler: dream_search_visit.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamSearchVisitRole.Arn
+
+  DreamGetLikeVisits:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          VISIT_TABLE_NAME: !Ref visit
+          LIKE_VISIT_TABLE_NAME: !Ref likeVisit
+      CodeUri: hello-world/
+      Handler: dream_get_liked_visits.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamGetLikeVisitsRole.Arn
+
+  DreamReadArticle:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          READ_ARTICLE_TABLE_NAME: !Ref readArticle
+      CodeUri: hello-world/
+      Handler: dream_read_article.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamReadArticleRole.Arn
+  
+  DreamGetRecentArticles:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          USER_KEYWORDS_TABLE_NAME: !Ref userKeyWords
+          ARTICLE_TABLE_NAME: !Ref article
+      CodeUri: hello-world/
+      Handler: dream_get_recent_articles.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamGetRecentArticlesRole.Arn
+
+  DreamSearchArticle:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          ARTICLE_INDEX_TABLE_NAME: !Ref articleIndex
+      CodeUri: hello-world/
+      Handler: dream_search_article.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamSearchArticleRole.Arn
+
+  DreamRecommendArticles:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          ARTICLE_INDEX_TABLE_NAME: !Ref articleIndex
+          USER_KEYWORDS_TABLE_NAME : !Ref userKeyWords
+      CodeUri: hello-world/
+      Handler: dream_recommend_articles.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamRecommendArticlesRole.Arn
 
   # -------------- DynamoDB ------------------------------
   psEmailValidation:
@@ -554,6 +704,10 @@ Resources:
           AttributeType: S
         - AttributeName: title
           AttributeType: S
+        - AttributeName: writtenTime
+          AttributeType: N
+        - AttributeName: is
+          AttributeType: N
       KeySchema:
         - AttributeName: writer
           KeyType: HASH
@@ -561,6 +715,18 @@ Resources:
           KeyType: RANGE
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        -
+          IndexName: sortVisit
+          KeySchema:
+            - AttributeName: is
+              KeyType: HASH
+            - AttributeName: writtenTime
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes: 
+            - tags
 
   visitTag:
     Type: AWS::DynamoDB::Table
@@ -643,6 +809,328 @@ Resources:
       FilterCriteria:
         Filters:
           - Pattern: "{\"eventName\": [\"INSERT\", \"MODIFY\"]}"
+
+  #--------------------------- Role For DreamRecommendArticles-------------------------------
+  DreamRecommendArticlesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamRecommendArticlesRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamRecommendArticlesRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:BatchGetItem
+            Resource: 
+            - !GetAtt articleIndex.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: 
+            - !GetAtt userKeyWords.Arn
+
+  #--------------------------- Role For DreamSearchArticle-------------------------------
+  DreamSearchArticleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamSearchArticleRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamSearchArticleRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: 
+            - !GetAtt articleIndex.Arn
+
+
+   #--------------------------- Role For DreamGetRecentArticles-------------------------------
+  DreamGetRecentArticlesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamGetRecentArticlesRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamGetRecentArticlesRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:BatchGetItem
+            Resource: 
+            - !GetAtt article.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: 
+            - !GetAtt userKeyWords.Arn
+  
+  #--------------------------- Role For DreamReadArticle-------------------------------
+  DreamReadArticleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamReadArticleRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamReadArticleRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:UpdateItem
+              - dynamodb:PutItem
+            Resource: 
+            - !GetAtt readArticle.Arn
+
+  #--------------------------- Role For DreamSearchVisit-------------------------------
+  DreamSearchVisitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamSearchVisitRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamSearchVisitRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+            Resource: 
+            - !GetAtt visitTag.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+            Resource: 
+            - !GetAtt likeVisit.Arn
+
+
+  #--------------------------- Role For DreamUnlikeVisit-------------------------------
+  DreamGetLikeVisitsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamGetLikeVisitsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamGetLikeVisitsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:BatchGetItem
+            Resource: 
+            - !GetAtt visit.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+            Resource: 
+            - !GetAtt likeVisit.Arn
+
+  #--------------------------- Role For DreamUnlikeVisit-------------------------------
+  DreamUnlikeVisitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamUnlikeVisitRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamUnlikeVisitRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:DeleteItem
+            Resource: 
+            - !GetAtt likeVisit.Arn
+
+  #--------------------------- Role For DreamDetailVisit-------------------------------
+  DreamDetailVisitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamDetailVisitRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamDetailVisitRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+            Resource: 
+            - !GetAtt likeVisit.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+            Resource: 
+            - !GetAtt visit.Arn
+
+
+  #--------------------------- Role For DreamLikeVisit-------------------------------
+  DreamLikeVisitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamLikeVisitRoleRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamLikeVisitRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: 
+            - !GetAtt likeVisit.Arn
+
+   #--------------------------- Role For DreamRecommendVisits -------------------------------
+  DreamRecommendVisitsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamRecommendVisitsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamAddVisitRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+            Resource: 
+            - !GetAtt likeVisit.Arn
+            - !Sub '${visit.Arn}/index/*'
+  
 
   #--------------------------- Role For DreamAddVisit -------------------------------
   DreamAddVisitRole:
@@ -1124,15 +1612,6 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
   UserTable:
     Description: "table for user info"
     Value: !GetAtt user.Arn

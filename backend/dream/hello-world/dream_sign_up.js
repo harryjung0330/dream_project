@@ -93,6 +93,11 @@ async function isVerified(email, code)
 
 async function addNewUser(email, password, name, nickname)
 {
+  if(password === undefined || name === undefined || nickname === undefined)
+    {
+        throw "undefined property exist!";
+    }
+    
     await DOC_CLIENT.transactWrite({
   TransactItems: [
     {

@@ -58,14 +58,9 @@ exports.lambdaHandler = async (event) => {
             }
         }
         
-        const promList = [];
-        promList.push(uploadAllPictToS3(files, keyNamesForFiles));
-        promList.push(addNewVisit(writer, title, address, detailAddress, content, tags));
+        var visit = await addNewVisit(writer, title, address, detailAddress, content, tags);
+        await uploadAllPictToS3(files, keyNamesForFiles);
         
-        const res = await Promise.all(promList);
-        
-        //get newly added visit
-        const visit = res[1];
         
         response.body.visit = visit;
         
@@ -138,7 +133,8 @@ async function addNewVisit(writer, title, address, detailAddress, content, tags)
             readView :readView,
             nickname: nickname,
             tags: tags,
-            writtenTime: writtenTime
+            writtenTime: writtenTime,
+            is: 1
         },
         ConditionExpression: "attribute_not_exists(writer) AND attribute_not_exists(title)"
     }
