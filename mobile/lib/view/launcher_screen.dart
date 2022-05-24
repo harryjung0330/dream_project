@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hackerton_project/view/sign_up.dart';
 
 import 'login_screen.dart';
 

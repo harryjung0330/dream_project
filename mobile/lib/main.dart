@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hackerton_project/view/export_view.dart';
+import 'package:hackerton_project/view/sign_up.dart';
 import "view/login_screen.dart";
 
 void main() {

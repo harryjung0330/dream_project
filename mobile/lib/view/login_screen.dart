@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../controller/controller.dart';
+import '../model/export_file.dart';
+
 class LogInScreen extends StatefulWidget
 {
   const LogInScreen({Key? key}) : super(key: key);
@@ -12,7 +15,8 @@ class _LogInScreenState extends State<LogInScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController psController = TextEditingController();
 
-  String? errorMsg = "hello";
+  String? passwordErrorMsg = null;
+  String? emailErrorMsg = null;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +118,9 @@ class _LogInScreenState extends State<LogInScreen> {
         child: Text(
           "로그인", style: TextStyle(color: Colors.white), textScaleFactor: 1.2,
         ),
-        onPressed: (){},
+        onPressed: (){
+          _onLogIn();
+        },
       ),
     );
   }
@@ -141,6 +147,10 @@ class _LogInScreenState extends State<LogInScreen> {
                 hintStyle: TextStyle(color: Colors.grey),
               ),
             ),
+            Align(
+              alignment:Alignment.centerLeft,
+              child: emailErrorMsg == null ? Container(): Text(emailErrorMsg!, style: TextStyle(color: Colors.red), textScaleFactor: 0.8,),
+            ),
             spacer(1),
             TextField(
               controller: psController,
@@ -151,7 +161,7 @@ class _LogInScreenState extends State<LogInScreen> {
             ),
             Align(
                 alignment:Alignment.centerLeft,
-              child: errorMsg == null ? Container(): Text(errorMsg!, style: TextStyle(color: Colors.red), textScaleFactor: 0.8,),
+              child: passwordErrorMsg == null ? Container(): Text(passwordErrorMsg!, style: TextStyle(color: Colors.red), textScaleFactor: 0.8,),
             ),
             spacer(2),
             Align(
@@ -234,5 +244,62 @@ class _LogInScreenState extends State<LogInScreen> {
   void _onForgetPs()
   {
 
+  }
+
+  void _onLogIn() async
+  {
+    String email = emailController.text;
+    String password = psController.text;
+    Controller cont = Controller();
+
+    if(email == "")
+    {
+      refreshState();
+      emailErrorMsg = "이메일을 입력하세요";
+
+    }
+    else if(password == "")
+    {
+      refreshState();
+      passwordErrorMsg ="비밀번호를 입력하세요";
+
+    }
+    else if(!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(email))
+    {
+      refreshState();
+      emailErrorMsg = "올바른 이메일이 아닙니다.";
+    }
+    else {
+      DataResponse<bool> response = await cont.log_in(
+          email: email, password: password);
+
+      bool data = response.data ?? false;
+      if (!data) {
+        emailErrorMsg = "이메일을 확인해 주세요";
+        passwordErrorMsg = "비밀번호를 확인해 주세요";
+      }
+      else{
+        print("로그인 성공!");
+        return;
+      }
+    }
+
+    setState(() {
+
+    });
+  }
+
+  void refreshState()
+  {
+    emailErrorMsg = null;
+    passwordErrorMsg =null;
+  }
+
+  void resetAll(BuildContext context) {
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (_) => LogInScreen()
+        )
+    );
   }
 }

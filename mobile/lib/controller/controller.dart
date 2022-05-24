@@ -16,4 +16,12 @@ class Controller
     _service = Service();
   }
 
+  Future<DataResponse<bool>> log_in({required String email, required String password}) async{
+
+    DataResponse<bool> response = await _service.log_in(email: email, password: password);
+
+    return response;
+  }
+
+
 }
