@@ -551,6 +551,8 @@ Resources:
         Variables:
           ARTICLE_INDEX_TABLE_NAME: !Ref articleIndex
           USER_KEYWORDS_TABLE_NAME : !Ref userKeyWords
+          ARTICLE_TABLE_NAME: !Ref article
+          ARTICLE_FETCHTIME_INDEX: "articleFetchtimeIndex"
       CodeUri: hello-world/
       Handler: dream_recommend_articles.lambdaHandler
       Runtime: nodejs14.x
@@ -560,6 +562,40 @@ Resources:
       Architectures:
         - x86_64
       Role: !GetAtt DreamRecommendArticlesRole.Arn
+
+  DreamScrapingArticles:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          URL: "https://www.mk.co.kr/news/realestate/?page=0"
+          FUNCTION_NAME: "DreamAddArticles"
+      CodeUri: scraping/
+      Handler: index.lambda_handler
+      Runtime: python3.9
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 180
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamScrapingArticlesRole1.Arn
+
+  DreamAddArticles:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: "DreamAddArticles"
+      Environment:
+        Variables:
+          ARTICLE_TABLE_NAME: !Ref article
+      CodeUri: hello-world/
+      Handler: dream_add_article.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamAddArticlesRole.Arn
 
   # -------------- DynamoDB ------------------------------
   psEmailValidation:
@@ -640,6 +676,8 @@ Resources:
           AttributeType: S
         - AttributeName: fetchTime
           AttributeType: N
+        - AttributeName: is
+          AttributeType: N
       KeySchema:
         - AttributeName: title
           KeyType: HASH
@@ -647,6 +685,19 @@ Resources:
           KeyType: RANGE
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
+      GlobalSecondaryIndexes:
+        -
+          IndexName: articleFetchtimeIndex
+          KeySchema:
+            - AttributeName: is
+              KeyType: HASH
+            - AttributeName: fetchTime
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes: 
+            - pictUrl
+            - path
   
   readArticle:
     Type: AWS::DynamoDB::Table
@@ -810,6 +861,83 @@ Resources:
         Filters:
           - Pattern: "{\"eventName\": [\"INSERT\", \"MODIFY\"]}"
 
+
+#----------------------------- cloudwatch event -------------------------------------------------
+  ScrapingScheduler:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: "cron(30 23 * * ? *)"
+      Targets: 
+        - 
+          Arn: !GetAtt DreamScrapingArticles.Arn
+          Id: "scheduleScraping"
+
+  PermissionForEventsToInvokeLambda: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !GetAtt DreamScrapingArticles.Arn
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt ScrapingScheduler.Arn
+
+  #--------------------------- Role For DreamScrapingArticles-------------------------------
+  DreamScrapingArticlesRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamScrapingArticlesRole1
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineScrapingArticlesRole1Policy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - lambda:InvokeFunction
+            Resource: 
+            - !GetAtt DreamAddArticles.Arn
+
+  #--------------------------- Role For DreamAddArticles-------------------------------
+  DreamAddArticlesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamAddArticlesRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamAddArticlesRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: 
+            - !GetAtt article.Arn
+
   #--------------------------- Role For DreamRecommendArticles-------------------------------
   DreamRecommendArticlesRole:
     Type: AWS::IAM::Role
@@ -843,6 +971,12 @@ Resources:
               - dynamodb:GetItem
             Resource: 
             - !GetAtt userKeyWords.Arn
+          - Effect: "Allow"
+            Action:
+              - dynamodb:Query
+            Resource:
+            - !Sub '${article.Arn}/index/*'
+            - !GetAtt article.Arn
 
   #--------------------------- Role For DreamSearchArticle-------------------------------
   DreamSearchArticleRole:

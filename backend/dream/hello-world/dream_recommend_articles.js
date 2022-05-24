@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 
 const ARTICLE_INDEX_TABLE_NAME = process.env.ARTICLE_INDEX_TABLE_NAME;
 const USER_KEYWORDS_TABLE_NAME = process.env.USER_KEYWORDS_TABLE_NAME;
+const ARTICLE_TABLE_NAME = process.env.ARTICLE_TABLE_NAME;
+const ARTICLE_FETCHTIME_INDEX = process.env.ARTICLE_FETCHTIME_INDEX;
 
 //Msgs to send to client
 const SuccessMsg = "successfully recommended articles";         //0
@@ -85,6 +87,12 @@ async function getRecommendedArticles(email)
     const result = await getUserKeyWords(email);
     //var seenArticles = new Set(result.seenArticle);
     
+    if(result === undefined)
+    {
+        var res = await getArticlesInFetchOrder();
+        return res;
+    }
+
     console.log("seen Articles:");
     console.log(result.seenArticle);
     
@@ -142,8 +150,31 @@ async function getRecommendedArticles(email)
         retList.push(JSON.parse(article));
     
     }
+
+    retList.sort(function(a1, a2){
+        return a2.fetchTime - a1.fetchTime;
+    });
     
     return retList;
+}
+
+async function getArticlesInFetchOrder(){
+    const params = {
+        TableName: ARTICLE_TABLE_NAME,
+        IndexName: ARTICLE_FETCHTIME_INDEX,
+        KeyConditionExpression: '#is = :is',
+        ExpressionAttributeNames: {
+          "#is": "is"
+        },
+        ExpressionAttributeValues: {
+            ":is" : 1
+        },
+        ScanIndexForward: "false"
+    }; 
+
+    var res = await DOC_CLIENT.query(params).promise();
+
+    return res.Items;
 }
 
 async function getArticles(keywordsToUse)
