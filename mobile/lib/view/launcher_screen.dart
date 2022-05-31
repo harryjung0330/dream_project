@@ -7,6 +7,7 @@ import 'login_screen.dart';
 class LauncherScreen extends StatefulWidget
 {
   const LauncherScreen({Key? key}) : super(key: key);
+  static const route = "/launcherScreen";
 
   @override
   State<LauncherScreen> createState() => _LauncherScreenState();
@@ -26,7 +27,7 @@ class _LauncherScreenState extends State<LauncherScreen> {
     return Scaffold(
       body: Container(
         child:Center(
-          child: SvgPicture.asset("assets/logos/home_launcher.svg")
+          child: SvgPicture.asset("assets/logos/home_launcher_re.svg")
         )
       ),
     );
@@ -34,7 +35,7 @@ class _LauncherScreenState extends State<LauncherScreen> {
 
   void _navigateToHome(BuildContext context) async{
     await Future.delayed(Duration(milliseconds: 1500), (){});
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LogInScreen()));
+    Navigator.pushReplacementNamed(context, LogInScreen.route);
   }
 }
 

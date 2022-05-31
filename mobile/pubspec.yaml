@@ -39,6 +39,8 @@ dependencies:
   flutter_secure_storage: ^5.0.2
   web_socket_channel: ^2.1.0
   flutter_svg: ^1.0.3
+  secure_shared_preferences: ^0.0.4
+  webview_flutter: ^3.0.4
 
 dev_dependencies:
   flutter_test:

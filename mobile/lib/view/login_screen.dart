@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hackerton_project/view/export_view.dart';
 
 import '../controller/controller.dart';
 import '../model/export_file.dart';
@@ -6,6 +7,7 @@ import '../model/export_file.dart';
 class LogInScreen extends StatefulWidget
 {
   const LogInScreen({Key? key}) : super(key: key);
+  static const String route = '/logInScreen';
 
   @override
   State<LogInScreen> createState() => _LogInScreenState();
@@ -35,6 +37,17 @@ class _LogInScreenState extends State<LogInScreen> {
     );
 
     return safteyBackground( mainWidget, screenHeight, screenWidth);
+  }
+
+  @override
+  void dispose()
+  {
+    print("dispose called!");
+
+    emailController.dispose();
+    psController.dispose();
+
+    super.dispose();
   }
 
   Widget frontStack(double widgetWidth, double widgetHeight)
@@ -93,7 +106,11 @@ class _LogInScreenState extends State<LogInScreen> {
         child: Text(
           "회원가입", style: TextStyle(color: Theme.of(context).primaryColor), textScaleFactor: 1.2,
         ),
-        onPressed: (){},
+        onPressed: (){
+          Navigator.of(context).pushNamed(
+              SignUpScreen.route
+          );
+        },
       ),
     );
   }
@@ -279,7 +296,7 @@ class _LogInScreenState extends State<LogInScreen> {
         passwordErrorMsg = "비밀번호를 확인해 주세요";
       }
       else{
-        print("로그인 성공!");
+        Navigator.of(context).pushReplacementNamed(RecommendArticleScreen.route);
         return;
       }
     }
