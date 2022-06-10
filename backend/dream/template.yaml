@@ -9,11 +9,6 @@ Description: >
 Globals:
   Function:
     Timeout: 3
-    VpcConfig:
-      SecurityGroupIds:
-        - !Ref LambdaSecurityGroup1
-      SubnetIds:
-        - !Ref LambdaSubnet
 
 Resources:
   #---------- Security Group For Lambda -----------------
@@ -83,47 +78,8 @@ Resources:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref RouteTablePublicSubnet
 
-  EIPNATGateway:                #Nat Gateway가 사용할 static ip address
-    Type: 'AWS::EC2::EIP'       
-    Properties: 
-        Domain : 'VPC'
-        
-  NatGateway:                  #NAT Gateway를 public subnet에 배치시킨다.
-      Type: 'AWS::EC2::NatGateway'
-      Properties:
-          AllocationId: !GetAtt EIPNATGateway.AllocationId
-          SubnetId : !Ref PublicSubnet
 
 
-  #----------- private subnet for LAMBDA------------------------
-  LambdaSubnet:
-    Type: "AWS::EC2::Subnet"
-    Properties:
-      AvailabilityZone: 'ap-northeast-2a'
-      CidrBlock: '10.0.0.0/24'
-      VpcId: !Ref VPC
-      Tags: 
-      - Key: Name
-        Value: 'subnet for lambda'
-  
-  RouteTableLambdaSubnet:
-    Type: "AWS::EC2::RouteTable"
-    Properties:
-      VpcId: !Ref VPC
-  
-  RouteLambdaSubnetToNATGateway:
-    Type: "AWS::EC2::Route"
-    Properties:
-      RouteTableId: !Ref RouteTableLambdaSubnet
-      DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !Ref NatGateway
-  
-  AssociationLambdaSubnetRouteTable:        # route table을 LambdaSubnet에 지정
-    Type: "AWS::EC2::SubnetRouteTableAssociation"
-    Properties:
-      SubnetId: !Ref LambdaSubnet
-      RouteTableId: !Ref RouteTableLambdaSubnet
-  
   #---------- private subnet for vpc endpoint ------------
   EndpointSubnet:
     Type: "AWS::EC2::Subnet"
@@ -140,12 +96,6 @@ Resources:
     Properties:
       VpcId: !Ref VPC
 
-  RouteEndpointSubnetToNAT:
-    Type: "AWS::EC2::Route"
-    Properties:
-      RouteTableId: !Ref RouteTableEndpointSubnet
-      DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !Ref NatGateway
   
   AssociationEndpointSubnetRouteTable:        # route table을 EndpointSubnet에 지정
     Type: "AWS::EC2::SubnetRouteTableAssociation"
@@ -158,8 +108,7 @@ Resources:
     Type: AWS::EC2::VPCEndpoint
     Properties: 
       RouteTableIds:                    #어떤 route table이 이 resource에 route할수 있는지 지정
-        - !Ref RouteTableEndpointSubnet
-        - !Ref RouteTableLambdaSubnet
+        - !Ref RouteTablePublicSubnet
       ServiceName: "com.amazonaws.ap-northeast-2.dynamodb" 
       VpcEndpointType: Gateway
       VpcId: !Ref VPC
@@ -236,7 +185,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: hello-world/
-      Handler: dream_log_in.lambdaHandler
+      Handler: dream_authorizer.lambdaHandler
       Runtime: nodejs14.x
       Layers:
         - !Ref Lambdalayer
@@ -259,6 +208,22 @@ Resources:
       Architectures:
         - x86_64
       Role: !GetAtt DreamLogInRole.Arn
+  
+  DreamGetUserInfo:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref user
+      CodeUri: hello-world/
+      Handler: dream_get_userinfo.lambdaHandler
+      Runtime: nodejs14.x
+      Layers:
+        - !Ref Lambdalayer
+      Timeout: 30
+      Architectures:
+        - x86_64
+      Role: !GetAtt DreamGetUserInfoRole.Arn
 
   DreamSendMailPs:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -400,7 +365,7 @@ Resources:
       Environment:
         Variables:
           VISIT_TABLE_NAME : !Ref visit
-          SORT_VISIT_INDEX: "sortVisit"
+          SORT_VISIT_INDEX: "sortVisit1"
           LIKE_VISIT_TABLE: !Ref likeVisit
       CodeUri: hello-world/
       Handler: dream_recommend_visits.lambdaHandler
@@ -518,6 +483,7 @@ Resources:
         Variables:
           USER_KEYWORDS_TABLE_NAME: !Ref userKeyWords
           ARTICLE_TABLE_NAME: !Ref article
+          READ_ARTICLE_TABLE_NAME: !Ref readArticle
       CodeUri: hello-world/
       Handler: dream_get_recent_articles.lambdaHandler
       Runtime: nodejs14.x
@@ -768,7 +734,7 @@ Resources:
         StreamViewType: NEW_AND_OLD_IMAGES
       GlobalSecondaryIndexes:
         -
-          IndexName: sortVisit
+          IndexName: sortVisit1
           KeySchema:
             - AttributeName: is
               KeyType: HASH
@@ -778,6 +744,7 @@ Resources:
             ProjectionType: INCLUDE
             NonKeyAttributes: 
             - tags
+            - address
 
   visitTag:
     Type: AWS::DynamoDB::Table
@@ -866,7 +833,7 @@ Resources:
   ScrapingScheduler:
     Type: AWS::Events::Rule
     Properties:
-      ScheduleExpression: "cron(30 23 * * ? *)"
+      ScheduleExpression: "cron(30 8 * * ? *)"
       Targets: 
         - 
           Arn: !GetAtt DreamScrapingArticles.Arn
@@ -1039,8 +1006,9 @@ Resources:
           - Effect : "Allow"
             Action: 
               - dynamodb:GetItem
+              - dynamodb:Query
             Resource: 
-            - !GetAtt userKeyWords.Arn
+            - !GetAtt readArticle.Arn
   
   #--------------------------- Role For DreamReadArticle-------------------------------
   DreamReadArticleRole:
@@ -1485,6 +1453,69 @@ Resources:
               - dynamodb:GetItem
               - dynamodb:UpdateItem
             Resource: !GetAtt psEmailValidation.Arn
+
+  #--------------------------- Role For DreamSendMailPs -------------------------------
+  DreamSendMailPsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamSendMailPsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamSendMailPsRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+              - dynamodb:GetItem
+            Resource: !GetAtt user.Arn
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+            Resource: !GetAtt psEmailValidation.Arn
+
+  #--------------------------- Role For DreamGetUserInfo -------------------------------------
+  DreamGetUserInfoRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DreamGetUserInfoRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow           #allow lambda to assume this role
+          Principal:
+           Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref LambdaNetworkPolicy
+        - !Ref CloudwatchExPolicy
+      Policies:
+      - PolicyName: inLineDreamGetUserInfoRolePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect : "Allow"
+            Action: 
+              - dynamodb:Query
+              - dynamodb:GetItem
+            Resource: !GetAtt user.Arn
 
 
   #--------------------------- Role For DreamSendMailPs -------------------------------

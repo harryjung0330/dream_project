@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const USER_KEYWORDS_TABLE_NAME = process.env.USER_KEYWORDS_TABLE_NAME;
 const ARTICLE_TABLE_NAME = process.env.ARTICLE_TABLE_NAME;
+const READ_ARTICLE_TABLE_NAME = process.env.READ_ARTICLE_TABLE_NAME;
 
 //Msgs to send to client
 const SuccessMsg = "successfully got recent articles";         //0
@@ -65,31 +66,39 @@ function getEmail(token)
 async function getRecentViewArticles(email)
 {
     const readParams = {
-        TableName: USER_KEYWORDS_TABLE_NAME,
-        Key:{
-            email: email
-        },
-        ProjectionExpression: "seenArticle"
+        TableName: READ_ARTICLE_TABLE_NAME,
+        ExpressionAttributeValues: {
+            ':e': email
+          },
+          KeyConditionExpression: 'email = :e'
     }
     
-    const res = await DOC_CLIENT.get(readParams).promise();
-    const viewArticle = res.Item.seenArticle;
+    const res = await DOC_CLIENT.query(readParams).promise();
+
+    if(res.Items == undefined || res.Items == null)
+    {
+        return [];
+    }
+
+    const viewArticle = res.Items
     
     console.log("viewArticle");
     console.log(viewArticle);
-    const aSet = new Set();
+
+    viewArticle.sort(function(a1, a2){
+        return a2.readTime - a1.readTime;
+    });
+
     const refinedList = [];
     
-    for(var index = viewArticle.length - 1; index >=0 ; index--)
+    for(var article of viewArticle)
     {
-        if(!aSet.has(viewArticle[index]))
-        {
-            let temp = viewArticle[index];
+        
+            let temp = article.article;
             console.log("temp");
             console.log(temp);
-            aSet.add(temp);
             refinedList.push(JSON.parse(temp));
-        }
+
     }
     
     console.log("refinedList: ");
@@ -127,6 +136,24 @@ async function getDetailsForArticles(articleKeys)
     {
         a2.fetchTime - a1.fetchTime;
     });
+
+    var aDict = {};
+    for(var article of retList)
+    {
+        aDict[article.fetchTime  + "" + article.title] = article;
+    }
+
+    for(var article of articleKeys)
+    {
+        var temp = aDict[article.fetchTime + "" + article.title];
+        if(temp == null || temp == undefined)
+        {
+            continue;
+        }
+
+        article.path = temp.path;
+        article.pictUrl = temp.pictUrl
+    }
     
-    return retList;
+    return articleKeys;
 }

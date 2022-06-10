@@ -82,11 +82,22 @@ async function getListofArticles(keyword)
         return [];
     }
     
+    var retList = [];
+    var pathSet = new Set();
+
     for(var index = 0; index < res.Item.listOfArticle.length; index++)
     {
-        res.Item.listOfArticle[index] = JSON.parse(res.Item.listOfArticle[index]);
+        var article = JSON.parse(res.Item.listOfArticle[index]);
+        if(!pathSet.has(article.path))
+        {
+            pathSet.add(article.path);
+            retList.push(article);
+        }
     }
+
+    console.log("returning articles: ");
+    console.log(retList);
     
-    return res.Item.listOfArticle;
+    return retList;
     
 }

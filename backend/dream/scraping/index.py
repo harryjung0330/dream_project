@@ -40,20 +40,29 @@ def lambda_handler(event, context):
     currentTimeStamp = getCurrentTimestamp()
 
     print("current timestamp: ", currentTimeStamp)
-
+    
+    
+  
+    
+    
     for e in list:
-        pictUrl = e.find("a", {"ga-evnt-act": "section:기사리스트_섬네일"}).find("img")["src"]
-        path = e.find("a", {"ga-evnt-act": "section:기사리스트_제목"})["href"]
-        title = e.find("a", {"ga-evnt-act": "section:기사리스트_제목"}).get_text()
-        date1 = e.find("span", {"class": "date"}).get_text()
-        date1 = date1[0:10]
-        temp = date1.split('.')
-
-        timestamp = getTimestamp(int(temp[0]), int(temp[1]), int(temp[2]))
-
-        if timestamp == currentTimeStamp:
-            listOfArticle.append(Article(pictUrl, path, title, timestamp ))
-
+        try:
+            pictUrl = e.find("a", {"ga-evnt-act": "section:기사리스트_섬네일"}).find("img")["src"]
+            path = e.find("a", {"ga-evnt-act": "section:기사리스트_제목"})["href"]
+            title = e.find("a", {"ga-evnt-act": "section:기사리스트_제목"}).get_text()
+            date1 = e.find("span", {"class": "date"}).get_text()
+            date1 = date1[0:10]
+            temp = date1.split('.')
+        
+            timestamp = getTimestamp(int(temp[0]), int(temp[1]), int(temp[2]))
+        
+            if timestamp == currentTimeStamp:
+                listOfArticle.append(Article(pictUrl, path, title, timestamp ))
+        except Exception as err:
+            print("error occurred for ")
+            print(e)
+            print(err)
+    
 
     print("---------------------------")
     time.sleep(0.5)
@@ -66,11 +75,9 @@ def lambda_handler(event, context):
         print(article.title)
         article.content = articleBody.get_text()
         print(article)
-        
-        
         lambda_client.invoke(FunctionName=functName, 
-                     InvocationType='Event',
-                     Payload=json.dumps(article.__dict__))
+                        InvocationType='Event',
+                       Payload=json.dumps(article.__dict__))
                      
         print("-----------")
 

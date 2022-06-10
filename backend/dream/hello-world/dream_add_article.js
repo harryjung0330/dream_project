@@ -2,7 +2,9 @@ const language = require('@google-cloud/language');
 const AWS = require("aws-sdk");
 const DOC_CLIENT = new AWS.DynamoDB.DocumentClient();
 
-const CREDENTIALS = JSON.parse(JSON.stringify());
+const CREDENTIALS = JSON.parse(JSON.stringify({
+  
+  }));
   
 const CONFIG = {
       credentials: {

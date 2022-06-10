@@ -113,13 +113,13 @@ async function getRecommendedArticles(email)
     
     const keywordsToUse = [];
     
-    if(keywords.length > 5)
+    if(keywords.length > 15)
     {
         keywords.sort(function(e1, e2){
             return e2.count - e1.count;
         });
         
-        for(var index = 0; index< 5; index++)
+        for(var index = 0; index< 15; index++)
         {
             keywordsToUse.push({
                 keyword: keywords[index].keyword});          

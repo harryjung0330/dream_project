@@ -27,7 +27,8 @@ exports.lambdaHandler = async (event, context) => {
         writer = newVisit.writer.S;
         address = newVisit.address.S;
         writtenTime = newVisit.writtenTime.N;
-        
+        var tags = [];
+
         if(title !== undefined)
         {
             const titleKeys = title.split(" ");
@@ -41,14 +42,18 @@ exports.lambdaHandler = async (event, context) => {
         for(var tag of rawtags)
         {
             keywords.add(tag.S);
+            tags.push(tag.S);
         }
+
+        console.log("tags:");
+        console.log(tags);
 
         console.log("keywords: ");
         keywords = Array.from(keywords);
         console.log(keywords);
 
         //await createAllIfKeywordsDoesNotExist(DOC_CLIENT, keywords);
-        await updateAllVisitTag(DOC_CLIENT, title, writer, address, keywords, writtenTime);
+        await updateAllVisitTag(DOC_CLIENT, title, writer, address, keywords, writtenTime, tags);
 
         response = {
             'statusCode': 200,
@@ -65,7 +70,7 @@ exports.lambdaHandler = async (event, context) => {
     return response
 };
 
-async function updateAllVisitTag(DOC_CLIENT, title, writer, address, tags, writtenTime)
+async function updateAllVisitTag(DOC_CLIENT, title, writer, address, tags, writtenTime, rawTags)
 {
     console.log("stringified value: ");
     
@@ -73,7 +78,7 @@ async function updateAllVisitTag(DOC_CLIENT, title, writer, address, tags, writt
         title: title,
         writer: writer,
         address: address,
-        tags: tags,
+        tags: rawTags,
         writtenTime: writtenTime
     };
 
@@ -95,6 +100,13 @@ async function updateAllVisitTag(DOC_CLIENT, title, writer, address, tags, writt
 
 //add to visit to one document
 async function updateVisitTag(DOC_CLIENT, keyword, stringifiedJson){
+    if(keyword == "")
+    {
+        return;
+    }
+
+    console.log("update keyword: " + keyword);
+
     var params = {
         TableName: TABLE_NAME,
         Key:{

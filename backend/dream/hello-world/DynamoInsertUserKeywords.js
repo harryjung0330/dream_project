@@ -168,7 +168,10 @@ async function handleInsertCase(DOC_CLIENT, email, article)
 
 //create update expression for above function
 function createUpdateExpression(keywords, incWord)
-{
+{   
+    var aSet = new Set(keywords);
+    keywords = Array.from(aSet);
+
     var exp = "ADD";
     var index = 0;
     for(var keyword of keywords)
