@@ -41,14 +41,33 @@ class _VisitScreenState extends State<VisitScreen> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
 
-    return MainFrame(mainWidget: Column(
+    return MainFrame(mainWidget: Stack(
       children: [
-        Flexible(
-            flex: 2,
-            child: searchBox()),
-        Flexible(
-            flex: 20,
-            child: searching? searchView(screenHeight * 0.2) : recommendView(screenHeight * 0.2)) ,
+        Column(
+          children: [
+            Flexible(
+               flex: 2,
+                child: searchBox()),
+            Flexible(
+                flex: 20,
+                child: searching? searchView(screenHeight * 0.2) : recommendView(screenHeight * 0.2)) ,
+          ],
+        ),
+        Align(
+          alignment: Alignment.bottomRight,
+          child:SizedBox(
+            width: screenWidth * 0.2,
+            height: screenHeight * 0.2,
+            child: IconButton(
+              icon:SvgPicture.asset('assets/logos/round_add_button.svg'),
+              onPressed: () async {
+                await Navigator.of(context).pushNamed(VisitNewScreen.route);
+                setState((){});
+              }
+              ),
+          ),
+
+        )
       ],
     ), iconButtons: RowButton(pressedButton: RowButton.VISIT_BUTTON)
     );
@@ -207,7 +226,13 @@ class _VisitScreenState extends State<VisitScreen> {
 
   Widget visitComponent(Visit visit, double tileHeight)
   {
-    return VisitComponent(tileHeight: tileHeight, visit: visit);
+    return GestureDetector(
+        onTap: () async{
+          await Navigator.pushNamed(context, VisitDetailScreen.route, arguments: visit);
+          setState((){});
+          },
+        child: VisitComponent(tileHeight: tileHeight, visit: visit)
+    );
   }
 
 

@@ -26,74 +26,74 @@ class _VisitComponentState extends State<VisitComponent> {
     super.initState();
     cont = Controller();
   }
+
   @override
   Widget build(BuildContext context) {
     tileHeight = widget.tileHeight;
     visit = widget.visit;
 
-    return GestureDetector(
-      onTap:(){
-        //Navigator.pushNamed(context, ArticleDetailScreen.route, arguments: article);
-      },
-      child: Container(
-          child: SizedBox(
-            height: tileHeight,
-            child: Padding(
-              padding: const EdgeInsets.all(3.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Flexible(
-                      flex:3,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: IconButton(onPressed: onPressedHeart,
-                          icon: visit.heart == 0? SvgPicture.asset('assets/logos/unfilled_heart_re.svg'):
-                          SvgPicture.asset('assets/logos/filled_heart_re.svg'),
+    return Container(
+        child: SizedBox(
+          height: tileHeight,
+          child: Padding(
+            padding: const EdgeInsets.all(3.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Flexible(
+                    flex:3,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(onPressed: onPressedHeart,
+                        icon: visit.heart == 0? SvgPicture.asset('assets/logos/unfilled_heart_re.svg'):
+                        SvgPicture.asset('assets/logos/filled_heart_re.svg'),
+                      ),
+                    )
+                ),
+                Flexible(
+                    flex:3,
+                    child: Row(
+                      children: [
+                        spacer(1),
+                        Flexible(
+                            flex:28,
+                            child: Text(visit.title, textScaleFactor: 2,)),
+                      ],
+                    )
+                ),
+                spacer(2),
+                Flexible(
+                    flex: 2,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                            flex: 6,
+                            child: Container(
+                                width: double.infinity,
+                                child: Text(
+                                    visit.address,
+                                    overflow: TextOverflow.ellipsis))
                         ),
-                      )
-                  ),
-                  Flexible(
-                      flex:3,
-                      child: Row(
-                        children: [
-                          spacer(1),
-                          Flexible(
-                              flex:28,
-                              child: Text(visit.title, textScaleFactor: 2,)),
-                        ],
-                      )
-                  ),
-                  spacer(2),
-                  Flexible(
-                      flex: 2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                              flex: 6,
-                              child: Container(
-                                  width: double.infinity,
-                                  child: Text(visit.address))
-                          ),
-                          spacer(1),
-                          Flexible(
-                              flex: 6,
-                              child: Container(
-                                  width: double.infinity,
-                                  child: Text(visit.tagsToString(), style: TextStyle(color: Colors.blue),textScaleFactor: 1.2,))
-                          )
+                        spacer(1),
+                        Flexible(
+                            flex: 6,
+                            child: Container(
+                                width: double.infinity,
+                                child: Text(visit.tagsToString(),
+                                    overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.blue),textScaleFactor: 1.2,))
+                        )
 
-                        ],
-                      )
-                  ),
-                ],
-              ),
+                      ],
+                    )
+                ),
+              ],
             ),
-          )
-      ),
+          ),
+        )
     );
   }
 

@@ -6,44 +6,33 @@ import '../controller/controller.dart';
 import '../model/export_file.dart';
 import 'export_view.dart';
 
-class ArticleDetailScreen extends StatefulWidget
+class ArticleRecentDetailScreen extends StatefulWidget
 {
-  static const route = '/articleDetailScreen';
+  static const route = '/articleRecentDetailScreen';
 
-  const ArticleDetailScreen();
+  const ArticleRecentDetailScreen();
 
   @override
-  State<ArticleDetailScreen> createState() => _ArticleDetailScreenState();
+  State<ArticleRecentDetailScreen> createState() => _ArticleRecentDetailScreenState();
 }
 
-class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
+class _ArticleRecentDetailScreenState extends State<ArticleRecentDetailScreen> {
   late Article article;
   late Controller cont = Controller();
-  late Timer t;
+
 
   @override
   void initState()
   {
-    print("initState of articleDetailScreen Called!");
+    print("initState of articleRecentDetailScreen Called!");
 
     super.initState();
-    t = Timer(Duration(seconds: 15),() async {
-      if(article == null)
-      {
-          return;
-      }
-
-      await cont.readArticles(title: article.title , fetchTime: article.fetchTime);
-      print("user read the article!");
-    });
   }
 
   @override
   void dispose()
-  {   t != null? t.cancel() : print("timer was null");
-      print("timer is cancelled!");
-      super.dispose();
-
+  {
+    super.dispose();
   }
 
   @override
@@ -51,7 +40,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
     article = ModalRoute.of(context)!.settings.arguments as Article;
 
-    return MainFrame(mainWidget: mainWidget() , iconButtons: RowButton(pressedButton: RowButton.ARTICLE_BUTTON,) );
+    return MainFrame(mainWidget: mainWidget() , iconButtons: RowButton(pressedButton: RowButton.MY_INFO_BUTTON,) );
   }
 
   Widget mainWidget()
@@ -69,7 +58,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         ),
         Expanded(
           child: WebView(
-              javascriptMode: JavascriptMode.unrestricted,
+            javascriptMode: JavascriptMode.unrestricted,
             initialUrl: article.path,
           ),
         ),
@@ -77,5 +66,3 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     );
   }
 }
-
-

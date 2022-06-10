@@ -27,4 +27,19 @@ class Article{
       FETCH_TIME : fetchTime
     };
   }
+
+  bool isValid()
+  {
+    if(pictUrl.isEmpty || path.isEmpty || title.isEmpty || fetchTime == -1)
+      {
+        return false;
+      }
+
+    if(path.substring(0, 4) != "http" )
+      {
+        return false;
+      }
+
+    return true;
+  }
 }

@@ -10,7 +10,7 @@ class Visit{
   {
     this.title = aMap["title"] ?? "";
     this.writer = aMap["writer"]?? "";
-    this.heart = int.parse((aMap["heart"] ?? 0).toString());
+    this.heart = int.parse((aMap["heart"] ?? 1).toString());
     this.address = aMap["address"] ?? "";
     List<dynamic> dList = aMap["tags"] ?? [];
     this.tags = [];
@@ -18,9 +18,17 @@ class Visit{
       {
         tags.add(temp.toString());
       }
-    if(tags.length > 2) {
-      tags = tags.sublist(0, 2);
-    }
+
+  }
+
+  Visit({required String title, required String writer, required int heart, required String address,
+  required List<String> tags})
+  {
+    this.title = title;
+    this.writer = writer;
+    this.heart = heart;
+    this.address = address;
+    this.tags = tags;
   }
 
   String toString()

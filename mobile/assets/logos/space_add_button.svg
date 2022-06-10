@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="78.259" height="43.481" viewBox="0 0 78.259 43.481">
+  <g id="그룹_254" data-name="그룹 254" transform="translate(-279.866 -793.551)">
+    <rect id="사각형_181" data-name="사각형 181" width="78.259" height="43.481" rx="21.741" transform="translate(279.866 793.551)" fill="#2799fa"/>
+    <path id="Icon_ionic-ios-add" data-name="Icon ionic-ios-add" d="M23.865,15.92H17.9V9.954a.989.989,0,0,0-1.978,0V15.92H9.954a.989.989,0,0,0,0,1.978H15.92v5.966a.989.989,0,0,0,1.978,0V17.9h5.966a.989.989,0,1,0,0-1.978Z" transform="translate(281.47 799.193)" fill="#fff"/>
+    <text id="Space" transform="translate(308.884 820.125)" fill="#fff" font-size="13" font-family="Arial-BoldMT, Arial" font-weight="700"><tspan x="0" y="0">Space</tspan></text>
+  </g>
+</svg>

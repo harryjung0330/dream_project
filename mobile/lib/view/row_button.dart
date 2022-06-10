@@ -59,7 +59,7 @@ class RowButton extends StatelessWidget
   {
     if(pressedButton != STAT_BUTTON)
       {
-
+        Navigator.of(context).pushNamedAndRemoveUntil(GraphDataScreen.route, (Route<dynamic> route) => false,);
       }
   }
 
@@ -67,7 +67,7 @@ class RowButton extends StatelessWidget
   {
     if(pressedButton != MY_INFO_BUTTON)
       {
-
+        Navigator.of(context).pushNamedAndRemoveUntil(MyInfoScreen.route, (Route<dynamic> route) => false,);
       }
   }
 }

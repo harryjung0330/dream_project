@@ -260,7 +260,7 @@ class _LogInScreenState extends State<LogInScreen> {
 
   void _onForgetPs()
   {
-
+    Navigator.of(context).pushNamed(FindPsScreen.route);
   }
 
   void _onLogIn() async

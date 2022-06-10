@@ -77,24 +77,23 @@ class MainFrame extends StatelessWidget {
           SizedBox(
             width: widgetWidth,
             height: widgetHeight * 0.92 ,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Flexible(
-                    flex:36,
-                    child: Stack(
-                        children:[
-                          whiteRoundedRectangle(),
-                         mainWidget        //place for main widget
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border.all(
+                      color: Theme.of(context).primaryColor,
+                      width: 2
+                  )
+              ),
+              child: Stack(
+                  children:[
+                    whiteRoundedRectangle(context),
+                   mainWidget        //place for main widget
 
-                        ])
-                ),
-              ],
+                  ]),
             ),
           ),
           const Divider(
-              height: 5,
+              height: 0,
               thickness: 2,
               endIndent: 0,
               color: Color(0xFF2799FA)
@@ -111,7 +110,7 @@ class MainFrame extends StatelessWidget {
     );
   }
 
-  Widget whiteRoundedRectangle()
+  Widget whiteRoundedRectangle(BuildContext context)
   {
     return Container(
         width: double.infinity,
@@ -120,8 +119,9 @@ class MainFrame extends StatelessWidget {
             color: Colors.white,
             border: Border.all(
               color: Colors.white,
+              width: 2
             ),
-            borderRadius: BorderRadius.all(Radius.circular(20))
+            borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20))
         )
     );
   }

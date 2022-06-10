@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:hackerton_project/service/service.dart';
 
@@ -52,9 +54,35 @@ class Controller
     return ret;
   }
 
+  Future<DataResponse<bool>> send_code_findps({required String email}) async{
+
+    DataResponse<bool> response = await _service.send_code_ps(email: email);
+
+    return response;
+  }
+
+  Future<DataResponse<bool>> verify_code_findps({required String email, required String code}) async{
+
+    DataResponse<bool> response = await _service.verify_code_ps(email: email, code: code);
+
+    return response;
+  }
+
+  Future<DataResponse<bool>> create_new_ps({required String email, required String code, required String password}) async{
+
+    DataResponse<bool> response = await _service.create_new_ps(email: email, code: code, password: password);
+
+    return response;
+  }
+
   Future<DataResponse<List<Article>>> getRecommendedArticles() async
   {
     return await _service.getRecommendedArticles();
+  }
+
+  Future<DataResponse<List<Article>>> getRecentViewedArticles() async
+  {
+    return await _service.getRecentViewArticles();
   }
 
   Future<DataResponse<List<Article>>> getSearchArticles({required String keyword}) async{
@@ -69,6 +97,11 @@ class Controller
     return await _service.recommendVisit();
   }
 
+  Future<DataResponse<List<Visit>>> getLikedVisits() async{
+    return await _service.getLikedVisit();
+  }
+
+
   Future<DataResponse<bool>> likeVisit({required String title, required String writer}) async{
     return await _service.likeVisit(title: title, writer: writer);
   }
@@ -80,5 +113,49 @@ class Controller
   Future<DataResponse<List<Visit>>> getSearchVisits({required String keyword}) async{
     return await _service.searchVisit(keyword: keyword);
   }
+
+  Future<DataResponse<VisitDetail>> getDetailVisit({required String writer, required String title}) async{
+    return await _service.getVisitDetail(writer: writer, title: title);
+  }
+
+  Future<DataResponse<VisitDetail>> addVisit({ required String title, required String address, required String detailAddress,
+    required Content content, required List<String> tags}) async
+  {
+    return await _service.addVisit(title: title, address: address, detailAddress: detailAddress, content: content, tags: tags);
+  }
+
+  Future<DataResponse<UserInfo>> getUserInfo() async
+  {
+    return await _service.getUserInfo();
+  }
+
+  Future<DataResponse<JusoList>> getAddr(
+      { required int currentPage, required int countPerPage, required String keyword}
+      ) async
+  {
+    return _service.getAddr(currentPage: currentPage, countPerPage: countPerPage, keyword: keyword);
+  }
+
+  Future<DataResponse<List<RealEstateData>>> getRealEstateData({required String generalAddress,
+    required String detailAddress}) async
+  {
+    return await _service.getData(generalAddress: generalAddress, detailAddress: detailAddress);
+  }
+
+  Future<DataResponse<List<RealEstateData>>> getJeonSaeRealEstateData({required String generalAddress,
+    required String detailAddress}) async
+  {
+    return await _service.getJeonSaeData(generalAddress: generalAddress, detailAddress: detailAddress);
+  }
+
+  Future<DataResponse<List<String>>> getGeneralAddress() async{
+    return await _service.getGeneralAddressList();
+  }
+
+  Future<DataResponse<List<String>>> getDetailAddress(String generalAddr) async{
+    return await _service.getDetailAddressList(generalAddr);
+  }
+
+
 
 }

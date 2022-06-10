@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hackerton_project/view/article_detail_screen.dart';
+import 'package:hackerton_project/view/create_new_ps_screen.dart';
 import 'package:hackerton_project/view/export_view.dart';
+import 'package:hackerton_project/view/find_ps_screen.dart';
+import 'package:hackerton_project/view/my_info_screen.dart';
 import 'package:hackerton_project/view/recommend_article_screen.dart';
 import 'package:hackerton_project/view/sign_up.dart';
 import "view/login_screen.dart";
@@ -32,7 +35,31 @@ class MyApp extends StatelessWidget {
         ArticleDetailScreen.route: (context) =>
             ArticleDetailScreen(),
         VisitScreen.route: (context) =>
-            VisitScreen()
+            VisitScreen(),
+        VisitDetailScreen.route: (context) =>
+            VisitDetailScreen(),
+        DisplayJusoScreen.route: (context) =>
+            DisplayJusoScreen(),
+        VisitNewScreen.route: (context) =>
+            VisitNewScreen(),
+        FindPsScreen.route: (context) =>
+            FindPsScreen(),
+        CreateNewPsScreen.route: (context) =>
+            CreateNewPsScreen(),
+        SuccessCreatePsScreen.route: (context) =>
+            SuccessCreatePsScreen(),
+        MyInfoScreen.route: (context) =>
+            MyInfoScreen(),
+        LikedVisitsScreen.route: (context) =>
+            LikedVisitsScreen(),
+        VisitLikeDetailScreen.route: (context) =>
+            VisitLikeDetailScreen(),
+        RecentArticleScreen.route: (context) =>
+            RecentArticleScreen(),
+        ArticleRecentDetailScreen.route: (context) =>
+            ArticleRecentDetailScreen(),
+        GraphDataScreen.route: (context) =>
+            GraphDataScreen()
       },
       title: 'Flutter Demo',
       theme: ThemeData(
