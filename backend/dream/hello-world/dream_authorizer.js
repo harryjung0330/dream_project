@@ -3,7 +3,13 @@ const jwt = require('jsonwebtoken');
 const secretKey = "my_secret_key";
 
 exports.lambdaHandler = async (event) => {
-    console.log(event);
+  console.log(event);
+  if(event.source  === 'DreamWarmLambdas')
+  {
+      console.log("invoked by scheduler to warm");
+      return {};
+  }
+
     
     var token = event.authorizationToken;
     var auth = verifyToken(token);

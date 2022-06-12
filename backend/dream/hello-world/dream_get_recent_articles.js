@@ -13,7 +13,13 @@ const FailMsg = "failed to get recent articles";                    //1
 
 
 exports.lambdaHandler = async (event) => {
-    
+    console.log(event);
+    if(event.source  === 'DreamWarmLambdas')
+    {
+        console.log("invoked by scheduler to warm");
+        return {};
+    }
+
     var response = {
         statusCode: 200,
         body: {

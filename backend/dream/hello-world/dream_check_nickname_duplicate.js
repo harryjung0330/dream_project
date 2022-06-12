@@ -10,6 +10,11 @@ const duplicateMsg = "the nickname cannot be used";         //1
 //handler function
 exports.lambdaHandler = async (event) => {
     console.log(event);
+    if(event.source  === 'DreamWarmLambdas')
+    {
+        console.log("invoked by scheduler to warm");
+        return {};
+    }
     
     var nickname = event.nickname;
     

@@ -8,8 +8,8 @@ import 'package:http/http.dart' as http;
 class TotalRepository{
   String? userSysId;
 
-  final String addrConfmKey = "devU01TX0FVVEgyMDIyMDMyMTE3NTIwMTExMjM3MDU=";
-  final String dataServiceKey = "Infuser 2ZE26318bTk+OH468xrEeWmkAH1NE2GWTm2n2gYgk8hqqtLA6jr6xZP/hMqa9uPssim6vgHzchU2XiCZoUK2fQ==";
+  final String addrConfmKey = "";
+  final String dataServiceKey = "";
 
   final String addressAuthority = "juso.go.kr";
   final String getAddrPath = "/addrlink/addrLinkApi.do";

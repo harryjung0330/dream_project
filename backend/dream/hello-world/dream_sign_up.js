@@ -10,7 +10,12 @@ const FailMsg = "fail signing up";                    //2
 
 
 exports.lambdaHandler = async (event) => {
-    
+  console.log(event);
+  if(event.source  === 'DreamWarmLambdas')
+  {
+      console.log("invoked by scheduler to warm");
+      return {};
+  }
     var response = {
         statusCode: 200,
         body: {

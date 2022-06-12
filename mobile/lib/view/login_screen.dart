@@ -20,6 +20,8 @@ class _LogInScreenState extends State<LogInScreen> {
   String? passwordErrorMsg = null;
   String? emailErrorMsg = null;
 
+  bool isLoggingIn = false;
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -74,7 +76,7 @@ class _LogInScreenState extends State<LogInScreen> {
        spacer(5),
        SizedBox(
           width: widgetWidth,
-           child: logInButton()
+           child: isLoggingIn? Center(child: CircularProgressIndicator()): logInButton()
        ),
        spacer(1),
        SizedBox(
@@ -171,6 +173,7 @@ class _LogInScreenState extends State<LogInScreen> {
             spacer(1),
             TextField(
               controller: psController,
+              obscureText: true,
               decoration: InputDecoration(
                 hintText: "비밀번호를 입력하세요",
                 hintStyle: TextStyle(color: Colors.grey),
@@ -287,6 +290,10 @@ class _LogInScreenState extends State<LogInScreen> {
       emailErrorMsg = "올바른 이메일이 아닙니다.";
     }
     else {
+      setState((){
+        isLoggingIn = true;
+      });
+
       DataResponse<bool> response = await cont.log_in(
           email: email, password: password);
 
@@ -302,7 +309,7 @@ class _LogInScreenState extends State<LogInScreen> {
     }
 
     setState(() {
-
+        isLoggingIn = false;
     });
   }
 

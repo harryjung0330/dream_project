@@ -15,6 +15,11 @@ const notFoundMsg = "user not found";         //1
 //handler function
 exports.lambdaHandler = async (event) => {
     console.log(event);
+    if(event.source  === 'DreamWarmLambdas')
+    {
+        console.log("invoked by scheduler to warm");
+        return {};
+    }
     
     var email = event.email;
     var password = event.pswd;

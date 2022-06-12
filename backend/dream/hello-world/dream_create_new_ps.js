@@ -13,6 +13,12 @@ const unverifiedMsg = "the email is not verified";        //1
 const notSendCodeMsg = "code was not sent to the email";  //2
 const wrongCodeMsg = "code is not correct";               //3
 exports.lambdaHandler = async (event) => {
+    console.log(event);
+    if(event.source  === 'DreamWarmLambdas')
+    {
+        console.log("invoked by scheduler to warm");
+        return {};
+    }
     
     const email = event.email;
     const code = event.code.toString();

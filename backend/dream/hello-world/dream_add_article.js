@@ -24,6 +24,7 @@ const ARTICLE_TABLE_NAME = process.env.ARTICLE_TABLE_NAME;
 
   
 exports.lambdaHandler = async (event) => {
+
     // TODO implement
     const pictUrl = event.pictUrl;
     const path = event.path;
