@@ -7,10 +7,10 @@
 
 ### UI
 - 로그인
-![로그인](https://github.com/harryjung0330/dream_project/blob/main/사진/로그인.png)
+![로그인](https://github.com/harryjung0330/dream_project/blob/main/사진/logIn.png)
 - 부동기사 추천
-![기사추천](https://github.com/harryjung0330/dream_project/blob/main/사진/기사추천.png)  
-![기사 상세 조회](https://github.com/harryjung0330/dream_project/blob/main/사진/기사%20상세조회.png)
+![기사추천](https://github.com/harryjung0330/dream_project/blob/main/사진/recommendArticles.png)  
+![기사 상세 조회](https://github.com/harryjung0330/dream_project/blob/main/사진/recommendDetail.png)
 - 부동산 관련 지표 조회
 ![지표조회](https://github.com/harryjung0330/dream_project/blob/main/사진/부동산_데이터_조회.png)
 - 부동산 분석내용 작성 및 공유
