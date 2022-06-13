@@ -4,6 +4,7 @@
 1. 부동산관련 기사 추천
 2. 부동산관련 지표 조회
 3. 부동산 분석내용 작성 및 공유
+- 시연영상: https://www.youtube.com/watch?v=sep6EhlQMbg 
 
 ### UI
 - 로그인  
