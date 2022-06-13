@@ -6,17 +6,17 @@
 3. 부동산 분석내용 작성 및 공유
 
 ### UI
-- 로그인
+- 로그인  
 ![로그인](https://github.com/harryjung0330/dream_project/blob/main/사진/logIn.png)
-- 부동기사 추천
-![기사추천](https://github.com/harryjung0330/dream_project/blob/main/사진/recommendArticles.png)  
-![기사 상세 조회](https://github.com/harryjung0330/dream_project/blob/main/사진/recommendDetail.png)
-- 부동산 관련 지표 조회
-![지표조회](https://github.com/harryjung0330/dream_project/blob/main/사진/부동산_데이터_조회.png)
-- 부동산 분석내용 작성 및 공유
-![분석내용 조회](https://github.com/harryjung0330/dream_project/blob/main/사진/방분기%20리스트.png)
-![분석내용 상세조회](https://github.com/harryjung0330/dream_project/blob/main/사진/임장기_상세조회.png)
-![분석내용_추가](https://github.com/harryjung0330/dream_project/blob/main/사진/임장기%20추가.png)
+- 부동기사 추천  
+![기사추천](https://github.com/harryjung0330/dream_project/blob/main/사진/recommendArticles.png)   
+![기사 상세 조회](https://github.com/harryjung0330/dream_project/blob/main/사진/recommendDetail.png)  
+- 부동산 관련 지표 조회  
+![지표조회](https://github.com/harryjung0330/dream_project/blob/main/사진/Graph.png)
+- 부동산 분석내용 작성 및 공유  
+![분석내용 조회](https://github.com/harryjung0330/dream_project/blob/main/사진/visitList.png)  
+![분석내용 상세조회](https://github.com/harryjung0330/dream_project/blob/main/사진/detailVisit.png)  
+![분석내용_추가](https://github.com/harryjung0330/dream_project/blob/main/사진/addVisit.png)  
   
 ### Frontend
 - 기술 스택: Flutter, Dart
